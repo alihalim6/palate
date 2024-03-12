@@ -15,8 +15,8 @@ const RandomColorProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [ secondaryColor, setSecondaryColor ] = useState<string>('');
 
   useEffect(() => {
-    setPrimaryColor(uniqolor.random({ lightness: [11, 33] }).color);
-    setSecondaryColor(uniqolor.random({ lightness: [66, 88] }).color);
+    setPrimaryColor(uniqolor.random({ lightness: [75, 90] }).color);
+    setSecondaryColor(uniqolor.random({ lightness: [10, 25] }).color);
   }, []);
 
   return (

@@ -1,100 +1,177 @@
 'use client';
 
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CircleIcon from '@mui/icons-material/Circle';
 import CloseIcon from '@mui/icons-material/Close';
-import MicNoneOutlinedIcon from '@mui/icons-material/MicNoneOutlined';
-import { useCallback, useContext, useState } from 'react';
-/* import useSWR from 'swr';
-
-import { fetcher } from '@/lib/fetcher';
- */
+import EastIcon from '@mui/icons-material/East';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useLongPress } from 'use-long-press';
 import { RandomColorContext } from '../providers/random-color.provider';
 import { page as styles } from './styles';
 
+const MAX_PASSPHRASE_LENGTH = 100;
+
 const SignInWithPassphrase: React.FC= () => {
-  const [ passphrase, setPassphrase ] = useState<string>('');
-  const [ micListening, setMicListening ] = useState<boolean>(false);
-
-  //const { data, mutate: mutateUser } = useSWR<object>('/passphrase/api', fetcher);
-
   const { primaryColor, secondaryColor } = useContext(RandomColorContext);
-  
-  const clearPassphrase = useCallback(() => {
-    const passphraseForm = document.getElementById('passphraseForm');
-    
-    if (passphraseForm) {
-      (passphraseForm as HTMLFormElement).reset();
+  const [micAvailable, setMicAvailable] = useState<boolean>(true);
+  const [micListening, setMicListening] = useState<boolean>(false);
+  const [passphrase, setPassphrase] = useState<string>('');
+  const [showPrompt, setShowPrompt] = useState<boolean>(false);
+  const recognition = useRef<SpeechRecognition | null>(null);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+
+  let promptTimeout: NodeJS.Timeout | null = null;
+  const actionButtonStyle = { backgroundColor: secondaryColor, color: primaryColor };
+
+  const stopRecording = useCallback(() => {
+    setMicListening(false);
+    setShowPrompt(false);
+
+    if (promptTimeout) clearTimeout(promptTimeout);
+
+    if (recognition.current) {
+      recognition.current.stop();
     }
 
-    setPassphrase('');
-  }, [setPassphrase]);
+    if (mediaRecorder.current) {
+      mediaRecorder.current.stop();
+    }
+  }, [setMicListening, setShowPrompt]);
 
-  const toggleMic = useCallback(() => {
-    setMicListening(listening => {
-      if (!listening) {
-        clearPassphrase();
-      }
+  const micToggle = useLongPress(useCallback(() => {
+    setMicListening(true);
+    
+    promptTimeout = setTimeout(() => {
+      setShowPrompt(true);
+    }, 2500);
+  }, [setMicListening, setShowPrompt]), 
+  { 
+    onCancel: stopRecording, 
+    onFinish: stopRecording,
+    threshold: 370,
+  });
 
-      return !listening;
-    });
-  }, [clearPassphrase]);
+  useEffect(() => {
+    if (micListening) {
+      recognition.current = new webkitSpeechRecognition();
+      recognition.current.continuous = true;
+      recognition.current.interimResults = false;
+
+      recognition.current.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        const transcript = result[0].transcript;
+        setPassphrase(passphrase => passphrase.concat(' ', transcript.toLowerCase()));
+      };
+
+      recognition.current.onend = stopRecording;
+      recognition.current.start();
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream: MediaStream) => {
+          mediaRecorder.current = new MediaRecorder(stream);
+
+          mediaRecorder.current.onstop = () => {
+            stopRecording();
+
+            for (const track of stream.getTracks()) {
+              track.stop();
+            }
+          };
+
+          mediaRecorder.current.start();
+        })
+        .catch((error) => {
+          console.error('Error accessing microphone:', error);
+        });
+    }
+  }, [micListening]);
+
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream: MediaStream) => {
+        // just asking permission here so stop mic stream
+        for (const track of stream.getTracks()) {
+          track.stop();
+        }
+      })
+      .catch(() => setMicAvailable(false));
+  }, []);
+
+  const logIn = useCallback(async () => {
+    await fetch('/api/passphrase', { 
+      method: 'POST',
+      body: JSON.stringify({ 
+        passphrase: passphrase.substring(0, MAX_PASSPHRASE_LENGTH).trim() 
+      }),
+    }).catch(() => setPassphrase(''));// TODO: handle
+  }, [passphrase]);
 
   return (
-    <>
-      <div className="flex flex-col items-center w-fit mx-auto z-10">
-        <div className="flex items-center">
-          {passphrase.trim() && 
-            <button className="cursor-pointer" onClick={clearPassphrase}>
-              <CloseIcon></CloseIcon>
-            </button>
-          }
-          {micListening && <CircleIcon className="text-[0.625em] animate-pulse mr-2 text-red-500"></CircleIcon>}
-          <form 
-            id="passphraseForm" 
-            className={`
-              relative 
-              p-[2px]
-              rounded-[32px]
-            `}
-            style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`}}>
-            <input 
-              type="textarea" 
-              className={`
-                bg-white
-                mx-auto 
-                p-[0.625rem]
-                text-inherit
-                rounded-3xl
-                placeholder:font-normal
-                placeholder:text-sm
-                ${micListening ? 'animate-mic-listening' : ''}
-              `}
-              placeholder={`${micListening ? 'Say' : 'Enter'} your passphrase`}
-              onChange={e => setPassphrase(e.target.value)}
-              maxLength={84}
-              disabled={micListening}
-            >
-            </input>
-          </form>
-        </div>
-
-        {!passphrase && 
-          <button onClick={toggleMic} className={`${styles.actionButton} bg-red-500`}>
-            {micListening && <CloseIcon fontSize="small"></CloseIcon>}
-            {!micListening && <MicNoneOutlinedIcon fontSize="small"></MicNoneOutlinedIcon>}
-          </button>
-        }
-
-        {passphrase && 
-          <button onClick={() => {}} className={`${styles.actionButton} bg-green-500`}>
-            <ArrowForwardIcon></ArrowForwardIcon>
-          </button>
-        }
-
-        <span className="text-sm pt-8"><span>Don&apos;t have one?&nbsp;</span><span className="cursor-pointer underline" onClick={() => {}}>Create one.</span></span>
+    <div className="flex flex-col items-center justify-between font-extrabold h-screen">
+      <div className="flex items-center justify-between w-full p-4 text-6xl">
+        <span>PALATE</span>
+        <span>PALETTE</span>
       </div>
-    </>
+
+      {micAvailable &&
+        <>
+          <div className="p-8">
+            {micListening && !passphrase && showPrompt && 
+              <span className="text-xs">First time? Use a phrase that's very unique and DO NOT forget it.</span>
+            }
+            {passphrase && 
+              <div className="flex items-center">
+                <span className="text-xl border-b-current border-b-2 border-dotted">{passphrase}</span>
+                <button className="cursor-pointer ml-4" onClick={() => setPassphrase('')}>
+                  <CloseIcon fontSize="small"></CloseIcon>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div className="mx-auto max-w-[4rem] mb-72">
+            {(!passphrase || micListening) &&
+              <button className={`${styles.actionButton} relative`} style={ actionButtonStyle } { ...micToggle() }>
+                PRESS AND HOLD
+
+                {micListening &&
+                  <svg 
+                    viewBox="0 0 200 200" 
+                    width="200" 
+                    height="200" 
+                    fill={secondaryColor} 
+                    className="absolute text-[1.0625rem] -top-[108%] -left-[106%] animate-spin"
+                    style={{ animationDuration: '3.5s' }}
+                  >
+                    <defs>
+                      <path 
+                        id="circle" 
+                        d="M 100, 100
+                          m -75, 0
+                          a 75, 75 0 1, 0 150, 0
+                          a 75, 75 0 1, 0 -150, 0
+                        "
+                      >
+                      </path>
+                    </defs>
+                    <text>
+                      <textPath alignmentBaseline="middle" xlinkHref="#circle" style={{ letterSpacing: '0.75rem' }}>
+                        SAY YOUR  PASSPHRASE
+                      </textPath>
+                    </text>
+                  </svg>
+                }
+              </button>
+            }
+            {passphrase && !micListening && 
+              <button className={`${styles.actionButton}`} style={ actionButtonStyle } onClick={logIn}>
+                <EastIcon fontSize="large"></EastIcon>
+              </button>
+            }
+          </div>
+        </>
+      }
+
+      {!micAvailable && <span className="mb-72">Permission to use microhpone required.</span>}
+    </div>
   );
 }
 

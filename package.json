@@ -9,21 +9,24 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
-    "@emotion/react": "11.11.1",
-    "@emotion/styled": "11.11.0",
     "@google-cloud/speech": "6.1.0",
     "@mui/icons-material": "5.14.19",
     "@mui/material": "5.14.19",
     "@typescript-eslint/eslint-plugin": "7.1.0",
+    "bcryptjs": "2.4.0",
     "iron-session": "8.0.1",
     "jsonwebtoken": "9.0.2",
     "next": "14.0.1",
+    "node-record-lpcm16": "1.0.1",
     "react": "18",
     "react-dom": "18",
     "swr": "2.2.4",
-    "uniqolor": "1.1.0"
+    "uniqolor": "1.1.0",
+    "use-long-press": "3.2.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "2.4.6",
+    "@types/dom-speech-recognition": "0.0.4",
     "@types/node": "20",
     "@types/react": "18",
     "@types/react-dom": "18",

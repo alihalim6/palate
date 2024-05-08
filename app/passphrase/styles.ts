@@ -8,5 +8,5 @@ export const layout = {
 };
 
 export const page = {
-  actionButton: 'cursor-pointer p-[0.6rem] shadow-md rounded-full text-[0.6rem] hover:scale-110',
+  actionButton: 'p-[0.6rem] shadow-md rounded-full text-[0.6rem] hover:scale-110 bg-black text-white',
 };

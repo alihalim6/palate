@@ -14,11 +14,9 @@ export default function useUser() {
   const router = useRouter();
   const { data, error, isLoading } = useSWR<User>('/api/user', fetcher);
   
-  useEffect(() => {
-    if (!data?.id) {
-      router.push('/passphrase');
-    };
-  }, [router, data, isLoading])
+  if (!data?.id) {
+    router.push('/passphrase');
+  };
 
   return { data, isLoading };
 }

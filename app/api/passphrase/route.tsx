@@ -1,11 +1,10 @@
-import { genSalt, hash } from 'bcryptjs';
+import { saveUser } from '@/users/users.repository';
 import { NextRequest } from 'next/server';
-
-const PASSPHRASE_SALT_ROUNDS = 9;
+import { createHash } from 'node:crypto';
 
 export async function POST(request: NextRequest) {
   const { passphrase } = await request.json() as { passphrase: string };
-  const id = await hash(passphrase, await genSalt(PASSPHRASE_SALT_ROUNDS));
+  await saveUser(createHash('sha256').update(passphrase).digest('base64'));
   
-  return Response.json({ });
+  return Response.json({});
 }

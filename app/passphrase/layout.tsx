@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
-import { RandomColorContext } from '../providers/random-color.provider';
-import { layout as styles } from './styles';
+import { RandomColorContext } from '@/providers/random-color.provider';
 
 
 const PassphraseLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { primaryColor, secondaryColor } = useContext(RandomColorContext);
 
   return (
-    <div style={{ backgroundColor: primaryColor, color: secondaryColor }} className="h-screen">
+    <div className="text-black h-screen">
       {children}
     </div>
   );

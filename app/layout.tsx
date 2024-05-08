@@ -3,7 +3,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Alexandria } from 'next/font/google';
 
-import Providers from './providers';
+import Providers from '@/providers';
 
 const font = Alexandria({ subsets: ['latin'] });
 

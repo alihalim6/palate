@@ -35,7 +35,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "tailwind.config.js"
-, "app/lib/recordingAnimation.js"  ],
+, "app/lib/recording-animation.js"  ],
   "exclude": [
     "node_modules"
   ]

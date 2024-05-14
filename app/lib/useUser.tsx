@@ -12,11 +12,13 @@ export type User = {
 
 export default function useUser() {
   const router = useRouter();
-  const { data, error, isLoading } = useSWR<User>('/api/user', fetcher);
+  const { data, error, isLoading, isValidating } = useSWR<User>('/api/user', fetcher);
   
-  if (!data?.id) {
-    router.push('/passphrase');
-  };
+  useEffect(() => {
+    if (error || (!isValidating && !isLoading && !data?.id)) {
+      router.push('/passphrase');
+    };
+  }, [data, isLoading]);
 
-  return { data, isLoading };
+  return { isLoading };
 }

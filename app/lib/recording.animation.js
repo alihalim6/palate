@@ -2,12 +2,9 @@
 
 import SineWaves from 'sine-waves';
 
-const useRecordingAnimation = () => {
+const recordingAnimation = () => {
   const animation = document.querySelector('#recording-animation');
-
-  if (animation) {
-    animation.classList.remove('hidden');
-  }
+  animation?.classList.remove('hidden');
   
   new SineWaves({
     el: document.getElementById('recording-animation'),
@@ -73,4 +70,4 @@ const useRecordingAnimation = () => {
   });
 }
 
-export default useRecordingAnimation;
+export default recordingAnimation;

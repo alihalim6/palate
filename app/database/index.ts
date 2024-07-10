@@ -1,6 +1,6 @@
 // copy/pasted from Kysely documentation
 
-import { Kysely, PostgresDialect } from 'kysely';
+import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
 import { DB } from './generated-types';
 
@@ -17,4 +17,7 @@ const dialect = new PostgresDialect({
 // to communicate with your database.
 export const db = new Kysely<DB>({
   dialect,
+  plugins: [
+    new CamelCasePlugin()
+  ],
 })

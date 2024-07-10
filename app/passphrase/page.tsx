@@ -2,8 +2,10 @@
 
 import { recordAudio, requestMicrophonePermission } from '@/lib/audio';
 import { RandomColorContext } from '@/providers/random-color.provider';
+import { SavePassphraseRequest } from '@/types';
 import CloseIcon from '@mui/icons-material/Close';
 import EastIcon from '@mui/icons-material/East';
+import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useLongPress } from 'use-long-press';
@@ -22,9 +24,12 @@ const SignInWithPassphrase = () => {
   const router = useRouter();
 
   let promptTimeout: NodeJS.Timeout | null = null;
-  const actionButtonStyle = { backgroundColor: secondaryColor, color: primaryColor };
+  const actionButtonStyle = { backgroundColor: secondaryColor, color: primaryColor, border: 'none' };
 
   const stopRecording = () => {
+    recognition?.current?.stop();
+    mediaRecorder?.current?.stop();
+
     setIsMicListening(false);
     setShowPrompt(false);
 
@@ -35,6 +40,13 @@ const SignInWithPassphrase = () => {
 
   const micToggle = useLongPress(() => {
     setIsMicListening(true);
+
+    recordAudio({
+      recognition,
+      handleTranscript: (transcript) => setPassphrase(passphrase => passphrase.concat(' ', transcript.toLowerCase())),
+      handleStop: stopRecording,
+      mediaRecorder,
+    });
     
     promptTimeout = setTimeout(() => {
       setShowPrompt(true);
@@ -47,17 +59,6 @@ const SignInWithPassphrase = () => {
   });
 
   useEffect(() => {
-    if (isMicListening) {
-      recordAudio({
-        recognition,
-        handleTranscript: (transcript) => setPassphrase(passphrase => passphrase.concat(' ', transcript.toLowerCase())),
-        stopRecording,
-        mediaRecorder,
-      });
-    }
-  }, [isMicListening]);
-
-  useEffect(() => {
     requestMicrophonePermission().catch(() => setIsMicAvailable(false));
   }, []);
 
@@ -66,16 +67,16 @@ const SignInWithPassphrase = () => {
       method: 'POST',
       body: JSON.stringify({ 
         passphrase: passphrase.substring(0, MAX_PASSPHRASE_LENGTH).trim() 
-      }),
+      } satisfies SavePassphraseRequest),
     });
 
-    void router.push('/');
+    router.push('/');
   };
 
   return (
     <div className="flex flex-col items-center justify-between font-extrabold h-screen overflow-hidden">
       <div className="flex items-center justify-between p-4 text-9xl w-max">
-        <span>PALATE PALETTE</span>
+        <span className="bg-[url('/images/colorful-background.jpg')] bg-clip-text text-transparent bg-center">PALATE PALETTE</span>
       </div>
 
       {isMicAvailable &&
@@ -129,7 +130,7 @@ const SignInWithPassphrase = () => {
               </button>
             }
             {passphrase && !isMicListening && 
-              <button className={`${styles.actionButton}`} style={ actionButtonStyle } onClick={logIn}>
+              <button className={clsx(styles.actionButton, 'hover:scale-110')} style={ actionButtonStyle } onClick={logIn}>
                 <EastIcon fontSize="large"></EastIcon>
               </button>
             }

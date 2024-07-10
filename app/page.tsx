@@ -1,23 +1,34 @@
 'use client';
 
 import FinishRecording from '@/components/finish-recording';
-import { recordAudio, requestMicrophonePermission } from '@/lib/audio';
-import useUser from '@/lib/useUser';
+import { blobToBuffer, recordAudio, requestMicrophonePermission } from '@/lib/audio';
+import { AnalyzeEntryRequest, SaveAudioResponse } from '@/types';
+import CircularProgress from '@mui/material/CircularProgress';
 import clsx from 'clsx';
+import { revalidateTag } from 'next/cache';
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import uniqolor from 'uniqolor';
 
+const FINISH_RECORDING_DRAG_THRESHOLD = 85;
+
 const Home = () => {
-  const { isLoading } = useUser();
   const [flashingWord, setFlashingWord] = useState<'palate' | 'palette'>('palate');
   const [flashingWordColor, setFlashingWordColor] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognition = useRef<SpeechRecognition | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const [transcription, setTranscription] = useState<string>('');
-  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [transcript, setTranscript] = useState<string>(`There's something truly magical about the early hours of the day, when the world is still waking up and the air is crisp and fresh. As someone who has never been much of a morning person, I recently decided to challenge myself to embrace the dawn and see what all the fuss was about. What I discovered was a whole new appreciation for the beauty and tranquility that comes with early morning hikes. There's something truly magical about the early hours of the day, when the world is still waking up and the air is crisp and fresh. As someone who has never been much of a morning person, I recently decided to challenge myself to embrace the dawn and see what all the fuss was about. What I discovered was a whole new appreciation for the beauty and tranquility that comes with early morning hikes.`);
+  const [isRecording, setIsRecording] = useState<boolean>(true);
   const [isMicAvailable, setIsMicAvailable] = useState<boolean>(true);
+  const [audioChunks, setAudioChunks] = useState<Blob[] | null>(null);
+  const [finishRecordingKey, setFinishRecordingKey] = useState<number>(0); // to trigger rerender/reset of drag element
+  const [finishRecordingDragPercent, setFinishRecordingDragPercent] = useState(0);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const router = useRouter();
+  
+  const finishRecordingAnimationClassName = 'absolute flex flex-col h-screen justify-end bottom-0 gap-y-2';
 
   useEffect(() => {
     const flashingInterval = setInterval(() => {
@@ -32,15 +43,73 @@ const Home = () => {
     requestMicrophonePermission().catch(() => setIsMicAvailable(false));
   }, []);
 
-  const hasTranscription = useMemo(() => transcription.length > 0, [transcription]);
+  useEffect(() => {
+    const absoluteDragPercent = Math.abs(finishRecordingDragPercent);
+
+    if (absoluteDragPercent >= FINISH_RECORDING_DRAG_THRESHOLD) {
+      if (finishRecordingDragPercent > 0) {
+        setIsSaving(true);
+        saveEntry();
+      }
+
+      else discardEntry();
+    }
+  }, [finishRecordingDragPercent]);
+
+  const hasTranscript = useMemo(() => transcript.trim().length > 0, [transcript]);
+  const transcriptOpacity = useMemo(() => 1 - (Math.abs(finishRecordingDragPercent) * 0.01), [finishRecordingDragPercent]);
 
   const stopRecording = () => {
+    recognition?.current?.stop();
+    mediaRecorder?.current?.stop();
     setIsRecording(false);
   };
 
-  const saveEntry = () => {
+  const discardEntry = () => {
+    setTranscript('');
+    setAudioChunks(null);
     stopRecording();
-  };
+  }
+
+  const saveEntry = useCallback(async () => {
+    if (!audioChunks) {
+      //TODO at least save transcript
+      console.error('no audio chunks');
+      return;
+    }
+
+    if (isSaving) return;
+
+    try {
+      setIsRecording(false);
+      const audioBlob = new Blob(audioChunks, { type: mediaRecorder.current?.mimeType });
+      const audio = await blobToBuffer(audioBlob);
+      const formData = new FormData();
+      formData.append('transcript', transcript);
+      formData.append('audio', new Blob([audio]));
+
+      const saveAudioResponse = await fetch('/api/entry/audio', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const { entryId } = await saveAudioResponse.json() as SaveAudioResponse;
+
+      await fetch('/api/entry/analysis', {
+        method: 'POST',
+        body: JSON.stringify({
+          transcript,
+          entryId,
+        } satisfies AnalyzeEntryRequest),
+      });
+
+      revalidateTag('entries');
+      router.push('/entries');
+    } catch(error) { 
+      console.error(error)
+      /*TODO at least save transcript */ 
+    }
+  }, [audioChunks, isSaving]);
 
   const record = async () => {
     setIsRecording(true);
@@ -51,54 +120,56 @@ const Home = () => {
 
     audioRef.current?.play();
 
-    // animation library internally uses window object, so lazy load it 
-    // to avoid server-side error seen when using normal import
-    const recordingAnimation = (await import('@/lib/recording.animation')).default;
-    recordingAnimation();
-
     recordAudio({
       recognition,
-      handleTranscript: (transcript) => setTranscription(transcription => transcription.concat(' ', transcript.toLowerCase())),
-      stopRecording,
+      handleTranscript: (t) => setTranscript(transcript => transcript.concat(' ', t.trim())),
+      handleStop: stopRecording,
+      handleAudioChunks: (audioChunks) => setAudioChunks(audioChunks),
       mediaRecorder,
     });
   };
-  
-  if (isLoading) return <>LOADING...</>;
 
+  const handleDragStop = () => {
+    if (!isSaving) {
+      setFinishRecordingKey((previousKey) => previousKey + 1);
+      setFinishRecordingDragPercent(0);
+    }
+  };
+    
   return (
-    <div className="flex flex-col p-6 h-screen">
+    <div className="flex flex-col p-8 pb-20 h-screen">
       <div className="flex items-center justify-between">
-        <Link href="/entries">&lt; PAST ENTRIES</Link>
+        <Link href="/entries" className="hover:underline">&lt; Past Entries</Link>
         <span>{new Date().toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
       </div>
 
       {isMicAvailable && (
         <>
-          {isRecording && <canvas id="recording-animation" className="hidden self-center absolute animate-fade-in"></canvas>}
-
-          <div className="py-16 opacity-60">
-            <h2 className={clsx('md:self-center', (isRecording || hasTranscription) && 'hidden')}>What's on your <span style={{ color: flashingWordColor }}>{flashingWord}</span>?</h2>
-            <div className="flex items-center mt-14">
-              {hasTranscription && (
-                <span className={clsx('leading-8 transition-opacity', !isRecording && 'opacity-20')}>{transcription} {isRecording && <span className="animate-blink">|</span>}</span>
+          <div className="py-16 opacity-60 animate-fade-in">
+            <h2 className={clsx('md:self-center', (isRecording || hasTranscript) && 'hidden')}>What's on your <span style={{ color: flashingWordColor }}>{flashingWord}</span>?</h2>
+            <div className="flex items-center mt-4">
+              {hasTranscript && (
+                <p className="leading-8 transition-opacity" style={{ opacity: transcriptOpacity }}>{transcript} {isRecording && <span className="animate-blink">|</span>}</p>
               )}
-              {isRecording && !hasTranscription && <div className={clsx('ml-1 w-1 h-9 bg-black animate-blink', isRecording ? 'block' : 'hidden')}></div>}
+              {isRecording && !hasTranscript && <div className={clsx('ml-1 w-1 h-9 bg-black animate-blink', isRecording ? 'block' : 'hidden')}></div>}
             </div>
           </div>
 
           <button 
             onClick={record} 
             className={clsx(
-              'relative bg-red-600 p-8 self-center shadow-md rounded-full text-[0.6rem] hover:scale-110 w-fit', 
-              (isRecording || hasTranscription) && 'hidden',
+              'relative bg-red-600 p-8 self-center shadow-md rounded-full text-[0.6rem] w-fit animate-fade-in hover:scale-110', 
+              (isRecording || hasTranscript) && 'hidden',
             )}
           ></button>
           
           {isRecording && (
-            <div className="flex justify-between py-6 z-10 sticky bottom-0 flex-grow">
-              <FinishRecording onFinish={stopRecording} onDiscard={() => setTranscription('')} variant="discard" />
-              <FinishRecording onFinish={stopRecording} onSave={saveEntry} />
+            <div className="flex justify-center mt-auto sticky bottom-0 bg-white bg-opacity-60 p-4">
+              <FinishRecording 
+                onDrag={(dragPercent) => setFinishRecordingDragPercent(dragPercent)} 
+                onStop={handleDragStop} 
+                key={finishRecordingKey} 
+              />
             </div>
           )}
         
@@ -107,6 +178,19 @@ const Home = () => {
       )}
       
       {!isMicAvailable && <span className="mt-72">Permission to use microhpone required.</span>}
+
+      {(isRecording || isSaving) && (
+        <>
+          <div className={clsx('left-0 items-start', finishRecordingAnimationClassName)}>
+            <div className="bg-red-600 w-3" style={{ height: `${(finishRecordingDragPercent * -1)}%` }}></div>
+          </div>
+
+          <div className={clsx('right-0 items-end', finishRecordingAnimationClassName)}>
+            {isSaving && <CircularProgress className="!text-green-600" style={{ width: '1rem', height: '1rem' }} />}
+            <div className="bg-green-600 w-3" style={{ height: `${finishRecordingDragPercent}%` }}></div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

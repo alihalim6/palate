@@ -1,3 +1,4 @@
+import { timestamp } from '@/lib/helpers';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -8,12 +9,11 @@ if (process.argv.length !== 3) {
 
 try {
   const migrationName = process.argv[2].toLowerCase().replace(/[^a-z0-9]/g, '_');
-  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
   const migrationDir = path.join('app', 'database', 'migrations');
 
   await fs.mkdir(migrationDir, { recursive: true });
 
-  const migrationPath = path.join(migrationDir, `${timestamp}_${migrationName}.ts`);
+  const migrationPath = path.join(migrationDir, `${timestamp()}_${migrationName}.ts`);
 
   await fs.writeFile(migrationPath, `
     import { Kysely } from 'kysely'

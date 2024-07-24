@@ -1,40 +1,40 @@
 import { Entries } from '@/database/generated-types';
 
-export type User = {
+export interface User {
   'palate-user-id': string;
-};
+}
 
-type EntryAnalysisItem = {
+interface EntryAnalysisItem {
   value: string;
   reason: string;
 }
 
-export type EntryAnalysisResponse = {
+export interface EntryAnalysisResponse {
   textColor: EntryAnalysisItem;
   backgroundColor: EntryAnalysisItem;
   id: string;
 }
 
-export type SavePassphraseRequest = {
+export interface SavePassphraseRequest {
   passphrase: string;
 }
 
-export type AnalyzeEntryRequest = {
+export interface AnalyzeEntryRequest {
   transcript: string;
   entryId: string;
-};
+}
 
-export type GetEntriesRequest = {
+export interface GetEntriesRequest {
   offset?: number;
 }
 
 export type Entry = Omit<Entries, 'createdAt'> & { createdAt: Date };
 
-export type GetEntriesResponse = {
+export interface GetEntriesResponse {
   entries: Entry[];
   total: number;
 }
 
-export type SaveAudioResponse = {
+export interface SaveAudioResponse {
   entryId: string;
 }

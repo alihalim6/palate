@@ -8,14 +8,21 @@ if (process.argv.length !== 3) {
 }
 
 try {
-  const migrationName = process.argv[2].toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const migrationName = process.argv[2]
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '_');
   const migrationDir = path.join('app', 'database', 'migrations');
 
   await fs.mkdir(migrationDir, { recursive: true });
 
-  const migrationPath = path.join(migrationDir, `${timestamp()}_${migrationName}.ts`);
+  const migrationPath = path.join(
+    migrationDir,
+    `${timestamp()}_${migrationName}.ts`,
+  );
 
-  await fs.writeFile(migrationPath, `
+  await fs.writeFile(
+    migrationPath,
+    `
     import { Kysely } from 'kysely'
 
     export async function up(db: Kysely<any>): Promise<void> {
@@ -25,10 +32,11 @@ try {
     export async function down(db: Kysely<any>): Promise<void> {
       // migration code
     }
-  `);
+  `,
+  );
 
   console.log(`Created ${migrationPath}`);
-} catch(error) {
+} catch (error) {
   console.error(error);
   process.exit(1);
 }

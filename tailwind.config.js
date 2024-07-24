@@ -1,11 +1,9 @@
 module.exports = {
-  content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./app/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       animation: {
-        'blink': 'blink 1.5s ease-in-out infinite',
+        blink: 'blink 1.5s ease-in-out infinite',
         'fade-in': 'fadeIn 0.3s ease-in',
       },
       keyframes: {
@@ -19,5 +17,5 @@ module.exports = {
         },
       },
     },
-  }
+  },
 };

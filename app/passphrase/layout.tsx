@@ -1,18 +1,11 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React from 'react';
 
-import { RandomColorContext } from '@/providers/random-color.provider';
-
-
-const PassphraseLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { primaryColor, secondaryColor } = useContext(RandomColorContext);
-
-  return (
-    <div className="text-black h-screen">
-      {children}
-    </div>
-  );
-}
+const PassphraseLayout: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  return <div className="h-screen text-black">{children}</div>;
+};
 
 export default PassphraseLayout;

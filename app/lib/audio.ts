@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import { MutableRefObject } from 'react';
 
 interface RecordAudio {
@@ -9,12 +8,12 @@ interface RecordAudio {
   mediaRecorder: MutableRefObject<MediaRecorder | null>;
 }
 
-export function recordAudio({ 
-  recognition, 
-  handleTranscript, 
-  handleStop, 
-  handleAudioChunks, 
-  mediaRecorder 
+export function recordAudio({
+  recognition,
+  handleTranscript,
+  handleStop,
+  handleAudioChunks,
+  mediaRecorder,
 }: RecordAudio) {
   recognition.current = new webkitSpeechRecognition();
   recognition.current.continuous = true;
@@ -30,7 +29,8 @@ export function recordAudio({
   recognition.current.onend = handleStop;
   recognition.current.start();
 
-  navigator.mediaDevices.getUserMedia({ audio: true })
+  navigator.mediaDevices
+    .getUserMedia({ audio: true })
     .then((stream: MediaStream) => {
       mediaRecorder.current = new MediaRecorder(stream);
 
@@ -41,29 +41,30 @@ export function recordAudio({
           track.stop();
         }
       };
-      
+
       mediaRecorder.current.ondataavailable = ({ data }) => {
         audioChunks.push(data);
 
         if (handleAudioChunks) handleAudioChunks(audioChunks);
       };
-      
+
       mediaRecorder.current.start(5000);
     })
     .catch((error) => {
       handleStop();
-      console.error('Error accessing microphone:', error);
+      console.error('There was an error using the mic:', error);
     });
-};
+}
 
 export function requestMicrophonePermission() {
-  return navigator.mediaDevices.getUserMedia({ audio: true })
+  return navigator.mediaDevices
+    .getUserMedia({ audio: true })
     .then((stream: MediaStream) => {
       // just asking for mic permission here so stop stream
       for (const track of stream.getTracks()) {
         track.stop();
       }
-    });  
+    });
 }
 
 export function blobToBuffer(blob: Blob): Promise<Buffer> {

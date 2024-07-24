@@ -1,7 +1,8 @@
-import env from '@/lib/env';
 import speech from '@google-cloud/speech';
 import { google } from '@google-cloud/speech/build/protos/protos';
-import { Storage } from '@google-cloud/storage';
+import { GetSignedUrlConfig, Storage } from '@google-cloud/storage';
+
+import env from '@/lib/env';
 
 const speechClient = new speech.SpeechClient();
 const storage = new Storage(getGCPCredentials());
@@ -17,13 +18,19 @@ export function getGCPCredentials() {
           client_email: process.env.GCLOUD_SERVICE_ACCOUNT_EMAIL,
           private_key: process.env.GOOGLE_PRIVATE_KEY,
         },
-        projectId: process.env.GCP_PROJECT_ID,
+        projectId: env.gcpProjectId,
       }
-      // for local development, use gcloud CLI
-    : {};
-};
+    : // for local development, use gcloud CLI
+      {};
+}
 
-export async function uploadAudio({ audio, fileName}: { audio: Buffer, fileName: string }) {
+export async function uploadAudio({
+  audio,
+  fileName,
+}: {
+  audio: Buffer;
+  fileName: string;
+}) {
   return storage.bucket(env.audioStorageBucket).file(fileName).save(audio);
 }
 
@@ -43,4 +50,26 @@ export async function transcribeAudio(fileName: string) {
   };
 
   speechClient.longRunningRecognize(speechRequest);
+}
+
+export async function getAudioUrl(fileName: string) {
+  // https://github.com/googleapis/nodejs-storage/issues/360#issuecomment-440512054
+  const storageClient =
+    process.env.NODE_ENV === 'production'
+      ? storage
+      : new Storage({
+          projectId: env.gcpProjectId,
+          keyFilename: 'google_service_account.json',
+        });
+
+  const options: GetSignedUrlConfig = {
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+  };
+
+  return await storageClient
+    .bucket(env.audioStorageBucket)
+    .file(fileName)
+    .getSignedUrl(options);
 }

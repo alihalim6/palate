@@ -1,12 +1,17 @@
-import { db } from '@/database';
-import { EntryAnalysisResponse } from '@/types';
 import { createId } from '@paralleldrive/cuid2';
 
-export async function saveEntry({ 
-  userId, 
+import { db } from '@/database';
+import { EntryAnalysisResponse } from '@/types';
+
+export async function saveEntry({
+  userId,
   fileName,
   transcript,
-}: { userId: string, fileName: string, transcript: string}) {
+}: {
+  userId: string;
+  fileName: string;
+  transcript: string;
+}) {
   const id = createId();
 
   await db
@@ -26,10 +31,7 @@ export async function saveEntry({
     .executeTakeFirst();
 }
 export async function saveEntryAnalysis(
-  { 
-    textColor,
-    backgroundColor,
-  }: EntryAnalysisResponse, 
+  { textColor, backgroundColor }: EntryAnalysisResponse,
   entryId: string,
 ) {
   return db

@@ -7,12 +7,12 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Entries {
-  backgroundColor: string | null;
+  backgroundColor: string;
   backgroundColorReason: string | null;
   createdAt: Generated<Timestamp>;
   fileName: string;
   id: string;
-  textColor: string | null;
+  textColor: string;
   textColorReason: string | null;
   transcript: string | null;
   userId: string;

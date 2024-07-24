@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import Entries from '@/components/entries';
 import { Entry, GetEntriesResponse } from '@/types';
-import { useEffect, useState } from 'react';
 
 const EntriesPage = () => {
   const [currentEntries, setCurrentEntries] = useState<Entry[] | null>(null);
@@ -10,11 +11,14 @@ const EntriesPage = () => {
 
   const getEntries = async () => {
     try {
-      const entriesResponse = await fetch(`/api/entries?offset=${offset}`, { next: { tags: ['entries'] } });
-      const { entries, total } = await entriesResponse.json() as GetEntriesResponse;
+      const entriesResponse = await fetch(`/api/entries?offset=${offset}`, {
+        next: { tags: ['entries'] },
+      });
+      const { entries, total } =
+        (await entriesResponse.json()) as GetEntriesResponse;
       setCurrentEntries(entries);
       setOffset(total);
-    } catch(error) {
+    } catch (error) {
       console.error(error);
       //TODO
     }
@@ -33,10 +37,8 @@ const EntriesPage = () => {
         // something simple, loading shouldn't take long enough to be worth effort of more
       */}
       {!currentEntries && <div>LOADING...</div>}
-      
-      {currentEntries && (
-        <Entries entries={currentEntries} />
-      )}
+
+      {currentEntries && <Entries entries={currentEntries} />}
     </>
   );
 };

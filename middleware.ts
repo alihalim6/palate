@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
 
   if (!session['palate-user-id']) {
     return NextResponse.redirect(new URL('/passphrase', request.url));
-  };
+  }
 
   return NextResponse.next();
 }

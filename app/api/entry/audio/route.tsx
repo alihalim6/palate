@@ -1,11 +1,12 @@
-import { saveEntry } from '@/database/entries.repository';
-import { transcribeAudio, uploadAudio } from '@/lib/google';
-import { timestamp } from '@/lib/helpers';
-import { sessionConfig } from '@/lib/session.config';
-import { SaveAudioResponse, User } from '@/types';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
+
+import { saveEntry } from '@/database/entries.repository';
+import { getAudioUrl, transcribeAudio, uploadAudio } from '@/lib/google';
+import { timestamp } from '@/lib/helpers';
+import { sessionConfig } from '@/lib/session.config';
+import { SaveAudioResponse, User } from '@/types';
 
 export async function POST(request: NextRequest) {
   const session = await getIronSession<User>(cookies(), sessionConfig);
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
   });
 
   transcribeAudio(fileName);
-  
+
   const saveEntryResult = await saveEntry({
     userId: session['palate-user-id'],
     fileName,
@@ -29,5 +30,17 @@ export async function POST(request: NextRequest) {
 
   if (!saveEntryResult?.id) return;
 
-  return Response.json({ entryId: saveEntryResult.id } satisfies SaveAudioResponse);
+  return Response.json({
+    entryId: saveEntryResult.id,
+  } satisfies SaveAudioResponse);
+}
+
+export async function GET(request: NextRequest) {
+  const fileName = await request.nextUrl.searchParams.get('fileName');
+
+  if (!fileName) return new Response('fileName required', { status: 400 });
+
+  const [url] = await getAudioUrl(fileName);
+
+  return Response.json({ url });
 }

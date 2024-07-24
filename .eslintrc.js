@@ -1,9 +1,19 @@
 module.exports = {
-  extends: ['next/core-web-vitals', 'eslint:recommended', '@typescript-eslint/eslint-plugin'],
-  plugins: ['simple-import-sort', 'plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/stylistic'],
+  extends: [
+    'next/core-web-vitals',
+    'eslint:recommended',
+    'prettier',
+    'plugin:@typescript-eslint/stylistic',
+    'plugin:tailwindcss/recommended',
+  ],
+  plugins: ['simple-import-sort', '@typescript-eslint'],
   rules: {
     'simple-import-sort/imports': 'error',
-    'simple-import-sort/exports': 'error'
+    'simple-import-sort/exports': 'error',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'error',
+    'react-hooks/exhaustive-deps': 'off',
+    'tailwindcss/enforces-negative-arbitrary-values': 'off',
   },
   parser: '@typescript-eslint/parser',
   root: true,

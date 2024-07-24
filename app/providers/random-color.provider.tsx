@@ -8,11 +8,16 @@ export interface RandomColorContext {
   secondaryColor: string;
 }
 
-export const RandomColorContext = createContext<RandomColorContext>({ primaryColor: '', secondaryColor: '' });
+export const RandomColorContext = createContext<RandomColorContext>({
+  primaryColor: '',
+  secondaryColor: '',
+});
 
-const RandomColorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [ primaryColor, setPrimaryColor ] = useState<string>('');
-  const [ secondaryColor, setSecondaryColor ] = useState<string>('');
+const RandomColorProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [primaryColor, setPrimaryColor] = useState<string>('');
+  const [secondaryColor, setSecondaryColor] = useState<string>('');
 
   useEffect(() => {
     setPrimaryColor(uniqolor.random({ lightness: [75, 90] }).color);
@@ -20,8 +25,10 @@ const RandomColorProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <RandomColorContext.Provider value={{ primaryColor, secondaryColor }}>{children}</RandomColorContext.Provider>
+    <RandomColorContext.Provider value={{ primaryColor, secondaryColor }}>
+      {children}
+    </RandomColorContext.Provider>
   );
-}
+};
 
 export default RandomColorProvider;

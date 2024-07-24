@@ -16,7 +16,8 @@ const FinishRecording = ({ onDrag, onStop }: FinishRecordingProps) => {
 
     if (parentWidth) {
       const draggableWidth = draggableRef.current.clientWidth;
-      const dragPercent = (deltaX / ((parentWidth / 2) - draggableWidth / 2)) * 100;
+      const dragPercent =
+        (deltaX / (parentWidth / 2 - draggableWidth / 2)) * 100;
       onDrag?.(dragPercent);
     }
   };
@@ -29,9 +30,15 @@ const FinishRecording = ({ onDrag, onStop }: FinishRecordingProps) => {
       onStop={onStop}
       bounds="parent"
     >
-      <div ref={draggableRef} className="bg-black rounded-full cursor-grab flex items-center justify-items-center gap-x-2 px-5 py-5 active:cursor-grabbing">
+      <div
+        ref={draggableRef}
+        className="flex cursor-grab items-center justify-items-center gap-x-2 rounded-full bg-black p-5 active:cursor-grabbing"
+      >
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="bg-white h-[0.33rem] w-[0.33rem] rounded-full"></div>
+          <div
+            key={index}
+            className="h-[0.33rem] w-[0.33rem] rounded-full bg-white"
+          ></div>
         ))}
       </div>
     </Draggable>

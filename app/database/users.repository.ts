@@ -1,5 +1,6 @@
-import { db } from '@/database';
 import { createId } from '@paralleldrive/cuid2';
+
+import { db } from '@/database';
 
 export function saveUser(passphrase: string) {
   return db

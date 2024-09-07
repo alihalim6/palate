@@ -39,3 +39,7 @@ next-env.d.ts
 
 # google service account
 google_service_account.json
+
+# cloud
+/app/cloud/**/*.zip
+/app/cloud/transcripts/node_modules

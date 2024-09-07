@@ -1,7 +1,9 @@
 import { Entry } from '@/types';
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import Ticker from '@/components/ticker';
+import { entryDurationNum, entryDurationString } from '@/lib/helpers';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import FastRewindIcon from '@mui/icons-material/FastRewind';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -9,47 +11,62 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 interface PlaybackParams {
   entry: Entry;
-  currentEntryId: string;
+  audioTimeUpdateFn: (currentTime: number) => void;
 }
 
 const SEEK_INCREMENT_SECS = 10;
 
-const Playback = ({
-  entry: { textColor, backgroundColor, id, fileName },
-  currentEntryId,
-}: PlaybackParams) => {
-  const controlSize = '3.5rem';
-  const controlStyle: React.CSSProperties = {
-    height: controlSize,
-    width: controlSize,
+const Playback = (({ entry, audioTimeUpdateFn }: PlaybackParams) => {
+  const { textColor, backgroundColor, fileName } = entry;
+
+  const seekIconSize = '2.5rem';
+  const seekIconStyle: React.CSSProperties = {
+    height: seekIconSize,
+    width: seekIconSize,
+  };
+
+  const playPauseIconSize = '4rem';
+  const playPauseIconStyle: React.CSSProperties = {
+    height: playPauseIconSize,
+    width: playPauseIconSize,
   };
 
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
+
+  const audioUrlMap: Record<string, string> = {};
+
+  const handleTimeUpdate = () => {
+    if (audioRef) {
+      audioTimeUpdateFn(audioRef?.currentTime);
+    }
+  };
 
   useEffect(() => {
-    const currentAudioRef = audioRef.current;
     fetchAudioUrl();
+
+    if (!audioRef) return;
+
+    audioRef.addEventListener('timeupdate', handleTimeUpdate);
 
     return () => {
       setIsAudioPlaying(false);
 
-      if (currentAudioRef) {
-        currentAudioRef.pause();
-        currentAudioRef.currentTime = 0;
-      }
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      audioRef.removeEventListener('timeupdate', handleTimeUpdate);
     };
-  }, [currentEntryId]);
-
+  }, [entry, audioRef]);
 
   const fetchAudioUrl = async () => {
-    if (audioUrl || currentEntryId !== id) return;
+    if (audioUrlMap[entry.id]) return;
 
     try {
       const urlResponse = await fetch(`/api/entry/audio?fileName=${fileName}`);
       const { url } = (await urlResponse.json()) as { url: string };
       setAudioUrl(url);
+      audioUrlMap[entry.id] = url;
     } catch (error) {
       //TDOO
     }
@@ -57,71 +74,87 @@ const Playback = ({
 
   const playEntry = () => {
     if (isAudioPlaying) {
-      audioRef.current?.pause();
+      audioRef?.pause();
     } else {
-      audioRef.current?.play();
+      audioRef?.play();
     }
 
     setIsAudioPlaying(!isAudioPlaying);
   };
 
   const handleRewind = () => {
-    if (audioRef.current && isAudioPlaying) {
-      audioRef.current.currentTime -= SEEK_INCREMENT_SECS;
+    if (audioRef && isAudioPlaying) {
+      audioRef.currentTime -= SEEK_INCREMENT_SECS;
     }
   };
 
   const handleFastForward = () => {
-    if (audioRef.current && isAudioPlaying) {
-      audioRef.current.currentTime += SEEK_INCREMENT_SECS;
+    if (audioRef && isAudioPlaying) {
+      audioRef.currentTime += SEEK_INCREMENT_SECS;
     }
+  };
+
+  const duration = useMemo(() => {
+    return entryDurationString(entry);
+  }, [entry]);
+
+  const elapsedTime = () => {
+    if (!audioRef) return '0s';
+
+    if (duration && audioRef.currentTime > entryDurationNum(entry)) return duration;
+
+    return `${Math.floor(audioRef.currentTime)}s`;
   };
 
   return (
     <div
       className={clsx(
-        'flex flex-col opacity-0 transition-opacity',
+        'flex flex-col opacity-0 transition-opacity mt-3 gap-y-2',
         audioUrl && 'opacity-100',
       )}
     >
       <div className="mx-auto flex w-fit gap-x-4">
-        <button className={clsx('cursor-pointer')} onClick={handleRewind}>
+        <button className="cursor-pointer" onClick={handleRewind}>
           <FastRewindIcon
-            style={controlStyle}
-            className={clsx('cursor-pointer')}
+            style={seekIconStyle}
+            className="cursor-pointer"
           />
         </button>
         {!isAudioPlaying && (
           <PlayArrowIcon
-            style={controlStyle}
-            className={clsx('cursor-pointer')}
+            style={playPauseIconStyle}
+            className="cursor-pointer"
             onClick={() => playEntry()}
           />
         )}
         {isAudioPlaying && (
           <PauseIcon
             style={{
-              ...controlStyle,
+              ...playPauseIconStyle,
               backgroundColor: textColor,
               color: backgroundColor,
             }}
-            className={clsx('cursor-pointer')}
+            className="cursor-pointer"
             onClick={() => playEntry()}
           />
         )}
-        <button className={clsx('cursor-pointer')} onClick={handleFastForward}>
-          <FastForwardIcon style={controlStyle} />
+        <button className="cursor-pointer" onClick={handleFastForward}>
+          <FastForwardIcon style={seekIconStyle} />
         </button>
         {audioUrl && (
           <audio
-            ref={audioRef}
+            ref={setAudioRef}
             src={audioUrl}
             onEnded={() => setIsAudioPlaying(false)}
           />
         )}
       </div>
+      <div className={clsx('w-fit mx-auto py-1 px-2 invisible rounded-sm text-xs', audioRef && duration && '!visible')} style={{ backgroundColor: entry.backgroundColor, color: entry.textColor }}>
+        {`${elapsedTime()} / ${duration}`}
+      </div>
+      <Ticker label="RECORD NEW ENTRY" navPath="/" className="mt-12" />
     </div>
   );
-};
+});
 
 export default Playback;

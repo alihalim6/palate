@@ -2,12 +2,12 @@
 
 import CircularProgress from '@mui/material/CircularProgress';
 import clsx from 'clsx';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import uniqolor from 'uniqolor';
 
 import FinishRecording from '@/components/finish-recording';
+import Ticker from '@/components/ticker';
 import {
   blobToBuffer,
   recordAudio,
@@ -87,7 +87,7 @@ const Home = () => {
 
   const saveEntry = async () => {
     if (!audioChunks) {
-      //TODO at least save transcript (black and white)
+      //TODO at least save transcript
       console.error('no audio chunks');
       return;
     }
@@ -154,10 +154,8 @@ const Home = () => {
 
   return (
     <div className="flex h-screen flex-col p-8 pb-20">
-      <div className="flex items-center justify-between">
-        <Link href="/entries" className="hover:underline">
-          &lt; Past Entries
-        </Link>
+      {!isRecording && <Ticker label="PAST ENTRIES" navPath="/entries" direction="left" className="mb-12" />}
+      <div className="flex items-center justify-end">
         <span>
           {new Date().toLocaleDateString('en', {
             month: 'short',
@@ -202,7 +200,7 @@ const Home = () => {
           <button
             onClick={record}
             className={clsx(
-              'relative w-fit animate-fade-in self-center rounded-full bg-red-600 p-8 text-[0.6rem] shadow-md hover:scale-110',
+              'relative w-fit animate-fade-in self-center rounded-full bg-red-500 p-8 text-[0.6rem] shadow-md hover:scale-110',
               (isRecording || hasTranscript) && 'hidden',
             )}
           ></button>

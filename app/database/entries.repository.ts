@@ -21,6 +21,8 @@ export async function saveEntry({
       userId,
       fileName,
       transcript,
+      textColor: '#FFFFFF',
+      backgroundColor: '#000000',
     })
     .execute();
 

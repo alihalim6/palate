@@ -73,3 +73,27 @@ export async function getAudioUrl(fileName: string) {
     .file(fileName)
     .getSignedUrl(options);
 }
+
+export function mapMetaTranscript(metaTranscript: string | null) {
+  if (!metaTranscript) return null;
+
+  const mappedMetaTranscript: google.cloud.speech.v1.LongRunningRecognizeResponse = JSON.parse(metaTranscript);
+  
+  const mappedResults = mappedMetaTranscript.results.map(result => {
+    const words = result.alternatives?.[0].transcript?.trim();
+    const endTime = String(result.resultEndTime);
+
+    if (words) {
+      return {
+        words,
+        endTime: Number(endTime.replace('s', '')),
+      };
+    }
+
+    return null;
+  }).filter(result => !!result);
+
+  if (mappedResults.length > 0) return mappedResults;
+
+  return null;
+}

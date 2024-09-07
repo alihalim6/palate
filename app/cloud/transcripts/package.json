@@ -1,0 +1,12 @@
+{
+  "name": "insert-meta-transcripts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cloud Function to add speech-to-text transcripts to database",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.2",
+    "@google-cloud/storage": "^7.11.0",
+    "pg": "^8.11.0"
+  }
+}

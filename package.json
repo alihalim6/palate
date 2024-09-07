@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --fix && bun run prettier . --write",
-    "db:sync": "kysely-codegen --camel-case --dialect postgres --out-file app/database/generated-types.ts",
+    "db:sync": "kysely-codegen --camel-case --dialect postgres --out-file app/database/generated-types.ts && echo ':: CHECK IF CLOUD FUNCTIONS EFFECTED BY CHANGES ::'",
     "db:create-migration": "bun run scripts/db-create-migration.js",
     "db:apply-migrations": "bun run scripts/db-apply-migrations.ts"
   },
@@ -24,7 +24,7 @@
     "env-var": "7.4.2",
     "iron-session": "8.0.1",
     "jsonwebtoken": "9.0.2",
-    "kysely": "0.27.2",
+    "kysely": "0.27.4",
     "next": "14.0.1",
     "node-record-lpcm16": "1.0.1",
     "openai": "4.8.0",

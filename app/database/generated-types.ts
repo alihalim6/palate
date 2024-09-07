@@ -12,9 +12,10 @@ export interface Entries {
   createdAt: Generated<Timestamp>;
   fileName: string;
   id: string;
+  metaTranscript: string | null;
   textColor: string;
   textColorReason: string | null;
-  transcript: string | null;
+  transcript: string;
   userId: string;
 }
 

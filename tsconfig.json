@@ -29,8 +29,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "tailwind.config.js",
-    "app/lib/recording-animation.js",
-    "swiper.d.ts"
+    "swiper.d.ts", 
+    "app/cloud/transcripts/index.js"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "app/cloud/**/*.ts"]
 }

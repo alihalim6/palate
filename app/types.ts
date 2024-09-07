@@ -5,7 +5,7 @@ export interface User {
 }
 
 interface EntryAnalysisItem {
-  value: string;
+  words: string;
   reason: string;
 }
 
@@ -28,7 +28,15 @@ export interface GetEntriesRequest {
   offset?: number;
 }
 
-export type Entry = Omit<Entries, 'createdAt'> & { createdAt: Date };
+interface MetaTranscriptChunk {
+  words: string;
+  endTime: number;
+}
+
+export type Entry = Omit<Entries, 'createdAt' | 'metaTranscript'> & { 
+  createdAt: Date, 
+  metaTranscript: MetaTranscriptChunk[] | null,
+};
 
 export interface GetEntriesResponse {
   entries: Entry[];

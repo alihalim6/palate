@@ -21,16 +21,16 @@ module.exports = {
         },
         tickerRight: {
           '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' }
+          '100%': { transform: 'translateX(100%)' },
         },
         tickerLeft: {
           '0%': { transform: 'translateX(50%)' },
-          '100%': { transform: 'translateX(-100%)' }
+          '100%': { transform: 'translateX(-100%)' },
         },
       },
     },
     screens: {
-      'short': { 'raw': '(max-height: 750px)' },
+      short: { raw: '(max-height: 750px)' },
     },
   },
 };

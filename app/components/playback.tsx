@@ -1,13 +1,13 @@
-import { Entry } from '@/types';
+import FastForwardIcon from '@mui/icons-material/FastForward';
+import FastRewindIcon from '@mui/icons-material/FastRewind';
+import PauseIcon from '@mui/icons-material/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 
 import Ticker from '@/components/ticker';
 import { entryDurationNum, entryDurationString } from '@/lib/helpers';
-import FastForwardIcon from '@mui/icons-material/FastForward';
-import FastRewindIcon from '@mui/icons-material/FastRewind';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Entry } from '@/types';
 
 interface PlaybackParams {
   entry: Entry;
@@ -16,7 +16,7 @@ interface PlaybackParams {
 
 const SEEK_INCREMENT_SECS = 10;
 
-const Playback = (({ entry, audioTimeUpdateFn }: PlaybackParams) => {
+const Playback = ({ entry, audioTimeUpdateFn }: PlaybackParams) => {
   const { textColor, backgroundColor, fileName } = entry;
 
   const seekIconSize = '2.5rem';
@@ -101,7 +101,8 @@ const Playback = (({ entry, audioTimeUpdateFn }: PlaybackParams) => {
   const elapsedTime = () => {
     if (!audioRef) return '0s';
 
-    if (duration && audioRef.currentTime > entryDurationNum(entry)) return duration;
+    if (duration && audioRef.currentTime > entryDurationNum(entry))
+      return duration;
 
     return `${Math.floor(audioRef.currentTime)}s`;
   };
@@ -109,16 +110,13 @@ const Playback = (({ entry, audioTimeUpdateFn }: PlaybackParams) => {
   return (
     <div
       className={clsx(
-        'flex flex-col opacity-0 transition-opacity mt-3 gap-y-2',
+        'mt-3 flex flex-col gap-y-2 opacity-0 transition-opacity',
         audioUrl && 'opacity-100',
       )}
     >
       <div className="mx-auto flex w-fit gap-x-4">
         <button className="cursor-pointer" onClick={handleRewind}>
-          <FastRewindIcon
-            style={seekIconStyle}
-            className="cursor-pointer"
-          />
+          <FastRewindIcon style={seekIconStyle} className="cursor-pointer" />
         </button>
         {!isAudioPlaying && (
           <PlayArrowIcon
@@ -149,12 +147,21 @@ const Playback = (({ entry, audioTimeUpdateFn }: PlaybackParams) => {
           />
         )}
       </div>
-      <div className={clsx('w-fit mx-auto py-1 px-2 invisible rounded-sm text-xs', audioRef && duration && '!visible')} style={{ backgroundColor: entry.backgroundColor, color: entry.textColor }}>
+      <div
+        className={clsx(
+          'invisible mx-auto w-fit rounded-sm px-2 py-1 text-xs',
+          audioRef && duration && '!visible',
+        )}
+        style={{
+          backgroundColor: entry.backgroundColor,
+          color: entry.textColor,
+        }}
+      >
         {`${elapsedTime()} / ${duration}`}
       </div>
       <Ticker label="RECORD NEW ENTRY" navPath="/" className="mt-12" />
     </div>
   );
-});
+};
 
 export default Playback;

@@ -33,9 +33,9 @@ interface MetaTranscriptChunk {
   endTime: number;
 }
 
-export type Entry = Omit<Entries, 'createdAt' | 'metaTranscript'> & { 
-  createdAt: Date, 
-  metaTranscript: MetaTranscriptChunk[] | null,
+export type Entry = Omit<Entries, 'createdAt' | 'metaTranscript'> & {
+  createdAt: Date;
+  metaTranscript: MetaTranscriptChunk[] | null;
 };
 
 export interface GetEntriesResponse {

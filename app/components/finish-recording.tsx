@@ -32,12 +32,12 @@ const FinishRecording = ({ onDrag, onStop }: FinishRecordingProps) => {
     >
       <div
         ref={draggableRef}
-        className="flex cursor-grab items-center justify-items-center gap-x-2 rounded-full bg-black p-5 active:cursor-grabbing"
+        className="flex cursor-grab items-center justify-items-center gap-x-2 rounded-full bg-black px-5 py-[1.1rem] active:cursor-grabbing"
       >
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="h-[0.33rem] w-[0.33rem] rounded-full bg-white"
+            className="size-[0.33rem] rounded-full bg-white"
           ></div>
         ))}
       </div>

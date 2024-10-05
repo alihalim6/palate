@@ -8,8 +8,5 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  await db.schema
-    .alterTable('entries')
-    .dropColumn('meta_transcript')
-    .execute();
+  await db.schema.alterTable('entries').dropColumn('meta_transcript').execute();
 }

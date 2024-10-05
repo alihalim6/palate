@@ -77,21 +77,24 @@ export async function getAudioUrl(fileName: string) {
 export function mapMetaTranscript(metaTranscript: string | null) {
   if (!metaTranscript) return null;
 
-  const mappedMetaTranscript: google.cloud.speech.v1.LongRunningRecognizeResponse = JSON.parse(metaTranscript);
-  
-  const mappedResults = mappedMetaTranscript.results.map(result => {
-    const words = result.alternatives?.[0].transcript?.trim();
-    const endTime = String(result.resultEndTime);
+  const mappedMetaTranscript: google.cloud.speech.v1.LongRunningRecognizeResponse =
+    JSON.parse(metaTranscript);
 
-    if (words) {
-      return {
-        words,
-        endTime: Number(endTime.replace('s', '')),
-      };
-    }
+  const mappedResults = mappedMetaTranscript.results
+    .map((result) => {
+      const words = result.alternatives?.[0].transcript?.trim();
+      const endTime = String(result.resultEndTime);
 
-    return null;
-  }).filter(result => !!result);
+      if (words) {
+        return {
+          words,
+          endTime: Number(endTime.replace('s', '')),
+        };
+      }
+
+      return null;
+    })
+    .filter((result) => !!result);
 
   if (mappedResults.length > 0) return mappedResults;
 

@@ -17,11 +17,11 @@ export async function GET(request: NextRequest) {
     offset,
   );
 
-  const mappedEntries = fetchedEntries.map(entry => {
+  const mappedEntries = fetchedEntries.map((entry) => {
     return {
       ...entry,
       metaTranscript: mapMetaTranscript(entry.metaTranscript),
-    }
+    };
   });
 
   return Response.json({

@@ -27,6 +27,9 @@ functions.cloudEvent('insertMetaTranscripts', async (event) => {
   const metaTranscript = fileDownload[0].toString();
 
   await pgClient.connect();
-  await pgClient.query('UPDATE entries SET meta_transcript = $1 WHERE file_name = $2', [metaTranscript, fileName]);
+  await pgClient.query(
+    'UPDATE entries SET meta_transcript = $1 WHERE file_name = $2',
+    [metaTranscript, fileName],
+  );
   await pgClient.end();
 });

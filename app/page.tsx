@@ -1,6 +1,7 @@
 'use client';
 
-import CircularProgress from '@mui/material/CircularProgress';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,10 +22,6 @@ const Home = () => {
   const [flashingWord, setFlashingWord] = useState<'palate' | 'palette'>(
     'palate',
   );
-  const [flashingWordColor, setFlashingWordColor] = useState<string>('');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const recognition = useRef<SpeechRecognition | null>(null);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
   const [transcript, setTranscript] = useState<string>(''); //(`There's something truly magical about the early hours of the day, when the world is still waking up and the air is crisp and fresh. As someone who has never been much of a morning person, I recently decided to challenge myself to embrace the dawn and see what all the fuss was about. What I discovered was a whole new appreciation for the beauty and tranquility that comes with early morning hikes. There's something truly magical about the early hours of the day, when the world is still waking up and the air is crisp and fresh. As someone who has never been much of a morning person, I recently decided to challenge myself to embrace the dawn and see what all the fuss was about. What I discovered was a whole new appreciation for the beauty and tranquility that comes with early morning hikes.`);
   const [isRecording, setIsRecording] = useState<boolean>(false); //
   const [isMicAvailable, setIsMicAvailable] = useState<boolean>(true);
@@ -33,10 +30,13 @@ const Home = () => {
   const [finishRecordingDragPercent, setFinishRecordingDragPercent] =
     useState(0);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const router = useRouter();
 
-  const finishRecordingAnimationClassName =
-    'absolute flex flex-col h-screen justify-end bottom-0 gap-y-2';
+  const [flashingWordColor, setFlashingWordColor] = useState<string>('');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recognition = useRef<SpeechRecognition | null>(null);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     const flashingInterval = setInterval(() => {
@@ -68,14 +68,43 @@ const Home = () => {
     () => transcript.trim().length > 0,
     [transcript],
   );
-  const transcriptOpacity = useMemo(
-    () => 1 - Math.abs(finishRecordingDragPercent) * 0.01,
-    [finishRecordingDragPercent],
-  );
+
+  const transcriptOpacity = useMemo(() => {
+    if (finishRecordingDragPercent > 0) return;
+
+    return 1 + finishRecordingDragPercent * 0.01;
+  }, [finishRecordingDragPercent]);
+
+  const isSliding = useMemo(() => {
+    return finishRecordingDragPercent !== 0;
+  }, [finishRecordingDragPercent]);
+
+  const finishRecordingLabel = useMemo(() => {
+    if (!isRecording) return 'PAST ENTRIES';
+
+    return finishRecordingDragPercent > 0
+      ? 'SLIDE RIGHT TO SAVE'
+      : 'SLIDE LEFT TO DISCARD';
+  }, [finishRecordingDragPercent]);
+
+  const finishRecordingLabelColor = useMemo(() => {
+    if (!isRecording) return 'black';
+    return finishRecordingDragPercent > 0 ? 'green' : 'red';
+  }, [finishRecordingDragPercent]);
+
+  const finishRecordingIcon = useMemo(() => {
+    if (!isRecording) return null;
+    return finishRecordingDragPercent > 0 ? (
+      <CheckIcon htmlColor="green" />
+    ) : (
+      <CloseIcon htmlColor="red" />
+    );
+  }, [finishRecordingDragPercent]);
 
   const stopRecording = () => {
     recognition?.current?.stop();
     mediaRecorder?.current?.stop();
+    setFinishRecordingDragPercent(0);
     setIsRecording(false);
   };
 
@@ -147,15 +176,25 @@ const Home = () => {
 
   const handleDragStop = () => {
     if (!isSaving) {
-      setFinishRecordingKey((previousKey) => previousKey + 1);
+      setFinishRecordingKey((previousKey) => previousKey + 1); // force re-render of FinishRecording component to reset state
       setFinishRecordingDragPercent(0);
     }
   };
 
   return (
     <div className="flex h-screen flex-col p-8 pb-20">
-      {!isRecording && <Ticker label="PAST ENTRIES" navPath="/entries" direction="left" className="mb-12" />}
-      <div className="flex items-center justify-end">
+      <Ticker
+        label={finishRecordingLabel}
+        navPath="/entries"
+        direction="left"
+        className={clsx('fixed mb-8', isRecording && !isSliding && 'invisible')}
+        animate={!isSliding}
+        translateXPerc={finishRecordingDragPercent}
+        icon={finishRecordingIcon}
+        labelColor={finishRecordingLabelColor}
+      />
+
+      <div className="mt-14 flex items-center justify-end">
         <span>
           {new Date().toLocaleDateString('en', {
             month: 'short',
@@ -166,7 +205,7 @@ const Home = () => {
 
       {isMicAvailable && (
         <>
-          <div className="animate-fade-in py-16 opacity-60">
+          <div className="animate-fade-in pb-16 pt-8 opacity-60">
             <h2
               className={clsx(
                 'md:self-center',
@@ -177,7 +216,8 @@ const Home = () => {
               <span style={{ color: flashingWordColor }}>{flashingWord}</span>?
             </h2>
             <div className="mt-4 flex items-center">
-              {hasTranscript && (
+              {/* transcript */}
+              {hasTranscript && !isSaving && (
                 <p
                   className="leading-8 transition-opacity"
                   style={{ opacity: transcriptOpacity }}
@@ -186,6 +226,38 @@ const Home = () => {
                   {isRecording && <span className="animate-blink">|</span>}
                 </p>
               )}
+
+              {isSaving && (
+                <svg
+                  viewBox="0 0 200 200"
+                  width="200"
+                  height="200"
+                  className="mx-auto animate-spin text-[1.0625rem]"
+                  style={{ animationDuration: '2.5s' }}
+                >
+                  <defs>
+                    <path
+                      id="circle"
+                      d="M 100, 100
+                        m -75, 0
+                        a 75, 75 0 1, 0 150, 0
+                        a 75, 75 0 1, 0 -150, 0
+                      "
+                    ></path>
+                  </defs>
+                  <text>
+                    <textPath
+                      alignmentBaseline="middle"
+                      xlinkHref="#circle"
+                      style={{ letterSpacing: '0.79rem' }}
+                    >
+                      SAVING SAVING SAVING
+                    </textPath>
+                  </text>
+                </svg>
+              )}
+
+              {/* blinking cursor */}
               {isRecording && !hasTranscript && (
                 <div
                   className={clsx(
@@ -205,8 +277,8 @@ const Home = () => {
             )}
           ></button>
 
-          {isRecording && (
-            <div className="sticky bottom-0 mt-auto flex justify-center bg-white/60 p-4">
+          {isRecording && !isSaving && (
+            <div className="sticky bottom-4 mt-auto flex justify-center rounded-3xl bg-gray-100">
               <FinishRecording
                 onDrag={(dragPercent) =>
                   setFinishRecordingDragPercent(dragPercent)
@@ -223,40 +295,6 @@ const Home = () => {
 
       {!isMicAvailable && (
         <span className="mt-72">Permission to use microhpone required.</span>
-      )}
-
-      {(isRecording || isSaving) && (
-        <>
-          <div
-            className={clsx(
-              'left-0 items-start',
-              finishRecordingAnimationClassName,
-            )}
-          >
-            <div
-              className="w-3 bg-red-600"
-              style={{ height: `${finishRecordingDragPercent * -1}%` }}
-            ></div>
-          </div>
-
-          <div
-            className={clsx(
-              'right-0 items-end',
-              finishRecordingAnimationClassName,
-            )}
-          >
-            {isSaving && (
-              <CircularProgress
-                className="text-green-600"
-                style={{ width: '1rem', height: '1rem' }}
-              />
-            )}
-            <div
-              className="w-3 bg-green-600"
-              style={{ height: `${finishRecordingDragPercent}%` }}
-            ></div>
-          </div>
-        </>
       )}
     </div>
   );

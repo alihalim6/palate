@@ -115,7 +115,7 @@ const SignInWithPassphrase = () => {
             )}
           </div>
 
-          <div className="mx-auto mb-72 max-w-[4rem]">
+          <div className="mx-auto mb-72 max-w-16">
             {(!passphrase || isMicListening) && (
               <button
                 className={`${styles.actionButton} relative`}

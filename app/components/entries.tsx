@@ -1,18 +1,18 @@
 import 'swiper/css';
 
-import Playback from '@/components/playback';
-import { entryDurationString } from '@/lib/helpers';
-import { Entry } from '@/types';
 import AddIcon from '@mui/icons-material/Add';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RemoveIcon from '@mui/icons-material/Remove';
 import clsx from 'clsx';
 import { format } from 'date-fns';
-import Link from 'next/link';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FreeMode } from 'swiper/modules';
 import { Swiper, SwiperClass, SwiperSlide } from 'swiper/react';
+
+import Playback from '@/components/playback';
+import { entryDurationString } from '@/lib/helpers';
+import { Entry } from '@/types';
 
 interface EntriesProps {
   entries: Entry[];
@@ -24,17 +24,30 @@ const Entries = ({ entries }: EntriesProps) => {
   const [currentEntryId, setCurrentEntryId] = useState<string>(
     entries[entries.length - 1]?.id ?? '',
   );
-  const [showingTranscriptChunk, setShowingTranscriptChunk] = useState<boolean>(false);
-  const [selectedInfo, setSelectedInfo] = useState<'transcript' | 'backgroundColor' | 'textColor'>('transcript');
+  const [showingTranscriptChunk, setShowingTranscriptChunk] =
+    useState<boolean>(false);
+  const [selectedInfo, setSelectedInfo] = useState<
+    'transcript' | 'backgroundColor' | 'textColor'
+  >('transcript');
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const swiperRef = useRef<SwiperClass>();
   const infoRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const transcriptInfoSelected = useMemo(() => selectedInfo === 'transcript', [selectedInfo]);
-  const backgroundColorInfoSelected = useMemo(() => selectedInfo === 'backgroundColor', [selectedInfo]);
-  const textColorInfoSelected = useMemo(() => selectedInfo === 'textColor', [selectedInfo]);
+  const transcriptInfoSelected = useMemo(
+    () => selectedInfo === 'transcript',
+    [selectedInfo],
+  );
+  const backgroundColorInfoSelected = useMemo(
+    () => selectedInfo === 'backgroundColor',
+    [selectedInfo],
+  );
+  const textColorInfoSelected = useMemo(
+    () => selectedInfo === 'textColor',
+    [selectedInfo],
+  );
 
-  const slideContentClassName = 'flex flex-col items-center justify-start w-auto h-full p-8 pt-16 animate-fade-in';
+  const slideContentClassName =
+    'flex flex-col items-center justify-start w-auto h-full p-8 pt-16 animate-fade-in';
 
   const handleSlideChange = (swiper: SwiperClass) => {
     const currentEntry = entries[swiper.activeIndex];
@@ -48,32 +61,45 @@ const Entries = ({ entries }: EntriesProps) => {
 
   const scrollInfo = (direction: 'up' | 'down', entryId: string) => {
     const infoRef = infoRefs.current[entryId];
-    
+
     if (!infoRef) return;
 
     const SCROLL_AMOUNT = 100;
     const currentTop = infoRef.scrollTop;
-    const newTop = direction === 'up' ? currentTop - SCROLL_AMOUNT : currentTop + SCROLL_AMOUNT;
+    const newTop =
+      direction === 'up'
+        ? currentTop - SCROLL_AMOUNT
+        : currentTop + SCROLL_AMOUNT;
     infoRef.scrollTo({ top: newTop, behavior: 'smooth' });
   };
 
-  const setInfoValueRef = useCallback((node: HTMLParagraphElement | null, entryId: string) => {
-    if (!node) return;
+  const setInfoValueRef = useCallback(
+    (node: HTMLParagraphElement | null, entryId: string) => {
+      if (!node) return;
 
-    infoRefs.current[entryId] = node;
-  }, []);
+      infoRefs.current[entryId] = node;
+    },
+    [],
+  );
 
   const currentEntry = useMemo(() => {
-    return entries.find(entry => entry.id === currentEntryId);
+    return entries.find((entry) => entry.id === currentEntryId);
   }, [entries, currentEntryId]);
 
   const currentChunk = useMemo(() => {
     if (currentEntry?.metaTranscript) {
-      if (elapsedTime >= currentEntry.metaTranscript[currentEntry.metaTranscript.length - 1]?.endTime) {
+      if (
+        elapsedTime >=
+        currentEntry.metaTranscript[currentEntry.metaTranscript.length - 1]
+          ?.endTime
+      ) {
         return currentEntry.metaTranscript[0].words;
       }
 
-      return currentEntry.metaTranscript.find(chunk => chunk.endTime > elapsedTime)?.words ?? 'Loading...';
+      return (
+        currentEntry.metaTranscript.find((chunk) => chunk.endTime > elapsedTime)
+          ?.words ?? 'Loading...'
+      );
     }
 
     return 'Loading...';
@@ -81,14 +107,18 @@ const Entries = ({ entries }: EntriesProps) => {
 
   const selectedInfoValue = (entry: Entry) => {
     if (transcriptInfoSelected) {
-      return entry.metaTranscript?.map(chunk => chunk.words).join('\n') ?? entry.transcript;
+      return (
+        entry.metaTranscript?.map((chunk) => chunk.words).join('\n') ??
+        entry.transcript
+      );
     }
 
     if (backgroundColorInfoSelected) return entry.backgroundColorReason ?? '';
     if (textColorInfoSelected) return entry.textColorReason ?? '';
   };
 
-  const entryDateAndTime = (createdAt: Date) => format(createdAt, 'MMM d, yyyy @ h:mma');
+  const entryDateAndTime = (createdAt: Date) =>
+    format(createdAt, 'MMM d, yyyy @ h:mma');
 
   return (
     <div className="flex h-screen">
@@ -97,19 +127,19 @@ const Entries = ({ entries }: EntriesProps) => {
           <div
             key={entry.id}
             className={clsx(
-              'w-[8px] relative left-[8px] flex-1 cursor-pointer opacity-100 transition-all',
-              currentEntryId !== entry.id && 'opacity-30 !left-0',
+              'relative left-[8px] w-[8px] flex-1 cursor-pointer opacity-100 transition-all',
+              currentEntryId !== entry.id && '!left-0 opacity-30',
             )}
             style={{ backgroundColor: entry.backgroundColor }}
             onClick={() => swiperRef.current?.slideTo(index)}
           ></div>
         ))}
       </div>
-      <div className="flex flex-col min-w-0 w-[90%] mx-auto overflow-hidden">
+      <div className="mx-auto flex w-[90%] min-w-0 flex-col overflow-hidden">
         <Swiper
           initialSlide={entries.length - 1}
           direction="vertical"
-          className="cursor-grabbing w-full"
+          className="w-full cursor-grabbing"
           freeMode={{
             sticky: true,
             minimumVelocity: 0.1,
@@ -119,14 +149,15 @@ const Entries = ({ entries }: EntriesProps) => {
           onSwiper={(swiper: SwiperClass) => {
             swiperRef.current = swiper;
 
-            if (!!entries?.at(entries.length - 1)?.metaTranscript) setShowingTranscriptChunk(true);
+            if (entries?.at(entries.length - 1)?.metaTranscript)
+              setShowingTranscriptChunk(true);
           }}
           onSlideChange={handleSlideChange}
         >
           {entries.map((entry) => (
             <SwiperSlide key={entry.id}>
               <div
-                className="w-full h-full rounded-[0.25rem]"
+                className="size-full rounded"
                 style={{
                   backgroundColor: entry.backgroundColor,
                   color: entry.textColor,
@@ -137,8 +168,8 @@ const Entries = ({ entries }: EntriesProps) => {
                   width="200"
                   height="200"
                   className={clsx(
-                    'text-[1.18rem] rotate-[-40deg] scale-[0.55] absolute right-0 -top-6 rounded-full bg-white shadow-md z-10', 
-                    showingTranscriptChunk && 'left-0'
+                    'absolute -top-6 right-0 z-10 rotate-[-40deg] scale-[0.55] rounded-full bg-white text-[1.18rem] shadow-md',
+                    showingTranscriptChunk && 'left-0',
                   )}
                 >
                   <defs>
@@ -163,13 +194,17 @@ const Entries = ({ entries }: EntriesProps) => {
                 </svg>
                 {showingTranscriptChunk && (
                   <div className={slideContentClassName}>
-                    <button onClick={() => setShowingTranscriptChunk(false)} className="self-end">
+                    <button
+                      onClick={() => setShowingTranscriptChunk(false)}
+                      className="self-end"
+                    >
                       <InfoOutlinedIcon className="mb-6 cursor-pointer" />
                     </button>
-                    <p 
+                    <p
                       className={clsx(
-                        'text-5xl leading-[3rem] my-auto', 
-                        currentChunk.length > LONG_CHUNK_THRESHOLD && 'text-[2rem] leading-normal'
+                        'my-auto text-5xl leading-[3rem]',
+                        currentChunk.length > LONG_CHUNK_THRESHOLD &&
+                          'text-[2rem] leading-normal',
                       )}
                     >
                       {currentChunk}
@@ -179,71 +214,121 @@ const Entries = ({ entries }: EntriesProps) => {
                 {!showingTranscriptChunk && (
                   <div className={slideContentClassName}>
                     {!!entry.metaTranscript && (
-                      <button onClick={() => setShowingTranscriptChunk(true)} className="self-start">
+                      <button
+                        onClick={() => setShowingTranscriptChunk(true)}
+                        className="self-start"
+                      >
                         <GraphicEqIcon className="mb-6 cursor-pointer" />
                       </button>
                     )}
-                    <div className="flex gap-x-2 items-center h-full w-full">
-                      <div className="border-2 border-current p-1 m-2 h-full w-full overflow-scroll" ref={(node) => setInfoValueRef(node, entry.id)}>
-                        <div className="border-b-[1px] border-current">
+                    <div className="flex size-full items-center gap-x-2">
+                      <div
+                        className="m-2 size-full overflow-scroll border-2 border-current p-1"
+                        ref={(node) => setInfoValueRef(node, entry.id)}
+                      >
+                        <div className="border-b border-current">
                           <h1 className="text-3xl">Facts</h1>
                         </div>
-                        <div className="border-b-[5px] border-current flex flex-col py-1 gap-y-[2px] short:hidden">
-                          <h4 className="text-sm font-normal">1 serving per container</h4>
-                          <div className="flex justify-between font-semibold text-base">
+                        <div className="flex flex-col gap-y-[2px] border-b-[5px] border-current py-1 short:hidden">
+                          <h4 className="text-sm font-normal">
+                            1 serving per container
+                          </h4>
+                          <div className="flex justify-between text-base font-semibold">
                             <h3>Serving size</h3>
                             <h3>1 Entry</h3>
                           </div>
                         </div>
-                        <div className="border-b-4 border-current flex flex-col py-1 tracking-normal short:hidden">
+                        <div className="flex flex-col border-b-4 border-current py-1 tracking-normal short:hidden">
                           <h4 className="text-xs">Amount Per Serving</h4>
                           <div className="flex justify-between text-2xl">
                             <h2 className="font-semibold">Duration</h2>
                             <h2>{entryDurationString(entry) ?? '??'}</h2>
                           </div>
                         </div>
-                        <div className="flex flex-col text-xs py-1">
-                          <h6 className="text-right border-b-[1px] border-current w-full text-[10px]">% Daily Value</h6>
+                        <div className="flex flex-col py-1 text-xs">
+                          <h6 className="w-full border-b border-current text-right text-[10px]">
+                            % Daily Value
+                          </h6>
                           <div
-                            className={clsx('flex justify-between border-b-[1px] border-current py-[1px] cursor-pointer', transcriptInfoSelected && 'p-[2px]')}
+                            className={clsx(
+                              'flex cursor-pointer justify-between border-b border-current py-px',
+                              transcriptInfoSelected && 'p-[2px]',
+                            )}
                             onClick={() => setSelectedInfo('transcript')}
-                            style={{ backgroundColor: transcriptInfoSelected ? entry.textColor : '', color: transcriptInfoSelected ? entry.backgroundColor : '' }}
+                            style={{
+                              backgroundColor: transcriptInfoSelected
+                                ? entry.textColor
+                                : '',
+                              color: transcriptInfoSelected
+                                ? entry.backgroundColor
+                                : '',
+                            }}
                           >
                             <h6 className="font-bold">Transcript</h6>
                             <h6>100%</h6>
                           </div>
                           <div
-                            className={clsx('flex justify-between border-b-[1px] border-current py-[1px] cursor-pointer', backgroundColorInfoSelected && 'p-[2px]')}
+                            className={clsx(
+                              'flex cursor-pointer justify-between border-b border-current py-px',
+                              backgroundColorInfoSelected && 'p-[2px]',
+                            )}
                             onClick={() => setSelectedInfo('backgroundColor')}
-                            style={{ backgroundColor: backgroundColorInfoSelected ? entry.textColor : '', color: backgroundColorInfoSelected ? entry.backgroundColor : '' }}
+                            style={{
+                              backgroundColor: backgroundColorInfoSelected
+                                ? entry.textColor
+                                : '',
+                              color: backgroundColorInfoSelected
+                                ? entry.backgroundColor
+                                : '',
+                            }}
                           >
                             <div className="flex gap-x-1">
                               <h6 className="font-bold">Background Color</h6>
-                              <span className="font-normal">{entry.backgroundColor}</span>
+                              <span className="font-normal">
+                                {entry.backgroundColor}
+                              </span>
                             </div>
                             <h6>100%</h6>
                           </div>
                           <div
-                            className={clsx('flex justify-between border-b-[5px] border-current py-[1px] cursor-pointer', textColorInfoSelected && 'p-[2px]')}
+                            className={clsx(
+                              'flex cursor-pointer justify-between border-b-[5px] border-current py-px',
+                              textColorInfoSelected && 'p-[2px]',
+                            )}
                             onClick={() => setSelectedInfo('textColor')}
-                            style={{ backgroundColor: textColorInfoSelected ? entry.textColor : '', color: textColorInfoSelected ? entry.backgroundColor : '' }}
+                            style={{
+                              backgroundColor: textColorInfoSelected
+                                ? entry.textColor
+                                : '',
+                              color: textColorInfoSelected
+                                ? entry.backgroundColor
+                                : '',
+                            }}
                           >
                             <div className="flex gap-x-1">
                               <h6 className="font-bold">Text Color</h6>
-                              <span className="font-normal">{entry.textColor}</span>
+                              <span className="font-normal">
+                                {entry.textColor}
+                              </span>
                             </div>
                             <h6>100%</h6>
                           </div>
                         </div>
                         <div className="max-h-full text-xs">
-                          <p className="pt-2 whitespace-pre-wrap pb-1">
+                          <p className="whitespace-pre-wrap pb-1 pt-2">
                             {selectedInfoValue(entry)}
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-y-6 items-center">
-                        <RemoveIcon className="cursor-pointer" onClick={() => scrollInfo('up', entry.id)} />
-                        <AddIcon className="cursor-pointer" onClick={() => scrollInfo('down', entry.id)} />
+                      <div className="flex flex-col items-center gap-y-6">
+                        <RemoveIcon
+                          className="cursor-pointer"
+                          onClick={() => scrollInfo('up', entry.id)}
+                        />
+                        <AddIcon
+                          className="cursor-pointer"
+                          onClick={() => scrollInfo('down', entry.id)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -252,7 +337,14 @@ const Entries = ({ entries }: EntriesProps) => {
             </SwiperSlide>
           ))}
         </Swiper>
-        {currentEntry && <Playback entry={currentEntry} audioTimeUpdateFn={(currentTime: number) => setElapsedTime(currentTime)} />}
+        {currentEntry && (
+          <Playback
+            entry={currentEntry}
+            audioTimeUpdateFn={(currentTime: number) =>
+              setElapsedTime(currentTime)
+            }
+          />
+        )}
       </div>
     </div>
   );

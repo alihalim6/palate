@@ -7,7 +7,7 @@ const env = {
     .asString(),
   databaseHost: envVar.get('DATABASE_HOST').required().asString(),
   databaseName: envVar.get('DATABASE_NAME').required().asString(),
-  databasePort: envVar.get('DATABASE_PORT').required().asIntPositive(),
+  databasePort: envVar.get('DATABASE_PORT').asIntPositive(),
   databaseUrl: envVar.get('DATABASE_URL').required().asString(),
   audioStorageBucket: envVar.get('AUDIO_STORAGE_BUCKET').required().asString(),
   transcriptsStorageBucket: envVar

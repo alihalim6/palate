@@ -5,7 +5,7 @@ export interface User {
 }
 
 interface EntryAnalysisItem {
-  words: string;
+  value: string;
   reason: string;
 }
 

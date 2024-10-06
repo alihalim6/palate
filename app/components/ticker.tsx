@@ -61,6 +61,7 @@ const Ticker = ({
               {label}
             </span>
           )}
+          {/* West for 'back' on record page, East for 'go record' on entries page */}
           {icon ? (
             icon
           ) : isLeft ? (

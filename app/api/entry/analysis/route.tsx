@@ -12,11 +12,8 @@ export async function POST(request: NextRequest) {
 
   if (analysisResponse.content) {
     analysis = JSON.parse(analysisResponse.content) as EntryAnalysisResponse;
-
-    if (analysis.textColor && analysis.backgroundColor) {
-      revalidateTag('entries');
-      await saveEntryAnalysis(analysis, entryId);
-    }
+    revalidateTag('entries');
+    await saveEntryAnalysis(analysis, entryId);
   }
 
   return Response.json({});

@@ -8,28 +8,30 @@ import { Entry, GetEntriesResponse } from '@/types';
 const EntriesPage = () => {
   const [currentEntries, setCurrentEntries] = useState<Entry[] | null>(null);
   const [offset, setOffset] = useState<number>(0);
-
-  const getEntries = async () => {
-    try {
-      const entriesResponse = await fetch(`/api/entries?offset=${offset}`, {
-        next: { tags: ['entries'] },
-      });
-      const { entries, total } =
-        (await entriesResponse.json()) as GetEntriesResponse;
-      setCurrentEntries(entries);
-      setOffset(total);
-    } catch (error) {
-      console.error(error);
-      //TODO
-    }
-  };
+  const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {
+    const getEntries = async () => {
+      if (total === currentEntries?.length) return;
+
+      try {
+        const entriesResponse = await fetch(`/api/entries?offset=${offset}`, {
+          next: { tags: ['entries'] },
+        });
+        const { fetchedEntries, totalEntries } =
+          (await entriesResponse.json()) as GetEntriesResponse;
+        setCurrentEntries(fetchedEntries);
+        setOffset(fetchedEntries.length);
+        setTotal(totalEntries);
+      } catch (error) {
+        console.error(error);
+        //TODO
+      }
+    };
+
     getEntries();
     return () => setCurrentEntries(null);
   }, []);
-
-  //TODO: use swiper reachEnd() for pagination
 
   return (
     <>

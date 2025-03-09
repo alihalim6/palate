@@ -48,7 +48,7 @@ export async function saveEntryAnalysis(
     .execute();
 }
 
-export async function getEntries(userId: string, offset?: number) {
+export async function getEntries(userId: string, offset?: string | null) {
   const getEntriesQuery = db
     .selectFrom('entries')
     .where('userId', '=', userId)
@@ -60,13 +60,13 @@ export async function getEntries(userId: string, offset?: number) {
     .executeTakeFirstOrThrow();
 
   const entries = await getEntriesQuery
-    .offset(offset ?? 0)
+    .offset(Number(offset ?? 0))
     .limit(7)
     .orderBy('createdAt desc')
     .execute();
 
   return {
     entries,
-    total: Number(count.total),
+    totalEntries: Number(count.total),
   };
 }

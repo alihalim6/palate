@@ -57,7 +57,7 @@ const Entries = ({ entries }: EntriesProps) => {
 
   return (
     <div className="absolute top-[60%] h-2/5 w-full overflow-y-scroll" ref={listContainerRef}>
-      <div className="inset-shadow-sm sticky top-10 z-10 h-12 w-full bg-white" ref={currentEntryBarRef}>
+      <div className="inset-shadow-xs sticky top-10 z-10 h-12 w-full bg-white" ref={currentEntryBarRef}>
         {currentEntry && <CurrentEntryBar entry={currentEntry} />}
       </div>
        {/* calc(50vh - X): X = height of the current entry bar */}

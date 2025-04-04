@@ -205,7 +205,7 @@ const Home = () => {
 
       {isMicAvailable && (
         <>
-          <div className="animate-fade-in pb-16 pt-8 opacity-60">
+          <div className="mb-auto animate-fade-in pt-8 opacity-60">
             <h2
               className={clsx(
                 'md:self-center',

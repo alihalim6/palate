@@ -1,11 +1,11 @@
 import './globals.css';
 
 import type { Metadata } from 'next';
-import { IBM_Plex_Sans } from 'next/font/google';
+import { Golos_Text } from 'next/font/google';
 
 import Providers from '@/providers';
 
-const font = IBM_Plex_Sans({
+const font = Golos_Text({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
 });

@@ -24,10 +24,6 @@ export interface AnalyzeEntryRequest {
   entryId: string;
 }
 
-export interface GetEntriesRequest {
-  offset?: number;
-}
-
 interface MetaTranscriptChunk {
   words: string;
   endTime: number;
@@ -39,8 +35,8 @@ export type Entry = Omit<Entries, 'createdAt' | 'metaTranscript'> & {
 };
 
 export interface GetEntriesResponse {
-  entries: Entry[];
-  total: number;
+  fetchedEntries: Entry[];
+  totalEntries: number;
 }
 
 export interface SaveAudioResponse {

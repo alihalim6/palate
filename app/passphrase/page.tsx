@@ -86,7 +86,7 @@ const SignInWithPassphrase = () => {
 
   return (
     <div className="flex h-screen flex-col items-center justify-between overflow-hidden font-extrabold">
-      <div className="flex w-max items-center justify-between p-4 text-9xl">
+      <div className="flex items-center justify-between p-4 text-8xl">
         <span className="bg-[url('/images/colorful-background.jpg')] bg-contain bg-clip-text bg-center text-transparent">
           PALATE PALETTE
         </span>
